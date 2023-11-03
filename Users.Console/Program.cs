@@ -8,6 +8,7 @@ var services = new ServiceCollection();
 services.AddDbContext<UserContext>(options =>
 {
     options.UseSqlite(@"Data Source=Users.db;");
+    options.EnableSensitiveDataLogging();
 });
 
 services.AddTransient<UserUpdatesProcessor>();
@@ -24,7 +25,22 @@ using (var scope = sp.CreateScope())
 
 var processor = sp.GetRequiredService<UserUpdatesProcessor>();
 
+foreach (var profile in await processor.GetAllProfiles())
+{
+    Console.WriteLine($"{profile.Id} {profile.FirstName} {profile.LastName} {profile.Email} {profile.PhoneNumber} {profile.Address}");
+}
+
 using (var reader = new StreamReader(path))
 {
-    await processor.Process(reader);
+    var result = await processor.Process(reader);
+    Console.WriteLine(result);
+    Console.ReadKey();
 }
+
+Console.WriteLine("After update");
+var profiles = await processor.GetAllProfiles();
+foreach (var profile in profiles)
+{
+    Console.WriteLine($"{profile.Id} {profile.FirstName} {profile.LastName} {profile.Email} {profile.PhoneNumber} {profile.Address}");
+}
+Console.ReadKey();
